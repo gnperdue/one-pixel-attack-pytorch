@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
-from models import *
+import models
 from utils import progress_bar
 from torch.autograd import Variable
 
@@ -65,18 +65,18 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 else:
     print('==> Building model..')
-    # net = VGG('VGG16')
-    # net = ResNet18()
-    net = ResNet101()
-    # net = PreActResNet18()
-    # net = GoogLeNet()
-    # net = DenseNet121()
-    # net = ResNeXt29_2x64d()
-    # net = MobileNet()
-    # net = MobileNetV2()
-    # net = DPN92()
-    # net = ShuffleNetG2()
-    # net = SENet18()
+    # net = models.VGG('VGG16')
+    net = models.ResNet18()
+    # net = models.ResNet101()
+    # net = models.PreActResNet18()
+    # net = models.GoogLeNet()
+    # net = models.DenseNet121()
+    # net = models.ResNeXt29_2x64d()
+    # net = models.MobileNet()
+    # net = models.MobileNetV2()
+    # net = models.DPN92()
+    # net = models.ShuffleNetG2()
+    # net = models.SENet18()
 
 if use_cuda:
     net.cuda()
