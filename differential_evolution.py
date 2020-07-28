@@ -1,13 +1,15 @@
 """
-A slight modification to Scipy's implementation of differential evolution. To speed up predictions, the entire parameters array is passed to `self.func`, where a neural network model can batch its computations.
+A slight modification to Scipy's implementation of differential evolution. To
+speed up predictions, the entire parameters array is passed to `self.func`,
+where a neural network model can batch its computations.
 
 Taken from
 https://github.com/scipy/scipy/blob/70e61dee181de23fdd8d893eaa9491100e2218d7/scipy/optimize/_differentialevolution.py
 
 ----------
 
-differential_evolution: The differential evolution global optimization algorithm
-Added by Andrew Nelson 2014
+differential_evolution: The differential evolution global optimization
+algorithm Added by Andrew Nelson 2014
 """
 from __future__ import division, print_function, absolute_import
 import numpy as np
@@ -15,7 +17,6 @@ from scipy.optimize import OptimizeResult, minimize
 from scipy.optimize.optimize import _status_message
 from scipy._lib._util import check_random_state
 from scipy._lib.six import xrange, string_types
-import warnings
 
 
 __all__ = ['differential_evolution']
@@ -146,14 +147,14 @@ def differential_evolution(func, bounds, args=(), strategy='best1bin',
     Notes
     -----
     Differential evolution is a stochastic population based method that is
-    useful for global optimization problems. At each pass through the population
-    the algorithm mutates each candidate solution by mixing with other candidate
-    solutions to create a trial candidate. There are several strategies [2]_ for
-    creating trial candidates, which suit some problems more than others. The
-    'best1bin' strategy is a good starting point for many systems. In this
-    strategy two members of the population are randomly chosen. Their difference
-    is used to mutate the best member (the `best` in `best1bin`), :math:`b_0`,
-    so far:
+    useful for global optimization problems. At each pass through the
+    population the algorithm mutates each candidate solution by mixing with
+    other candidate solutions to create a trial candidate. There are several
+    strategies [2] for creating trial candidates, which suit some problems more
+    than others. The 'best1bin' strategy is a good starting point for many
+    systems. In this strategy two members of the population are randomly
+    chosen. Their difference is used to mutate the best member (the `best` in
+    `best1bin`), :math:`b_0`, so far:
     .. math::
         b' = b_0 + mutation * (population[rand0] - population[rand1])
     A trial vector is then constructed. Starting with a randomly chosen 'i'th
@@ -187,7 +188,8 @@ def differential_evolution(func, bounds, args=(), strategy='best1bin',
     >>> import numpy as np
     >>> def ackley(x):
     ...     arg1 = -0.2 * np.sqrt(0.5 * (x[0] ** 2 + x[1] ** 2))
-    ...     arg2 = 0.5 * (np.cos(2. * np.pi * x[0]) + np.cos(2. * np.pi * x[1]))
+    ...     arg2 = 0.5 * (np.cos(2. * np.pi * x[0]) +
+    ...                   np.cos(2. * np.pi * x[1]))
     ...     return -20. * np.exp(arg1) - np.exp(arg2) + 20. + np.e
     >>> bounds = [(-5, 5), (-5, 5)]
     >>> result = differential_evolution(ackley, bounds)
@@ -439,15 +441,15 @@ class DifferentialEvolutionSolver(object):
 
         # Each parameter range needs to be sampled uniformly. The scaled
         # parameter range ([0, 1)) needs to be split into
-        # `self.num_population_members` segments, each of which has the following
-        # size:
+        # `self.num_population_members` segments, each of which has the
+        # following size:
         segsize = 1.0 / self.num_population_members
 
         # Within each segment we sample from a uniform random distribution.
         # We need to do this sampling for each parameter.
         samples = (segsize * rng.random_sample(self.population_shape)
-
-        # Offset each segment to cover the entire parameter range [0, 1)
+                   # Offset each segment to cover the entire parameter
+                   # range [0, 1)
                    + np.linspace(0., 1., self.num_population_members,
                                  endpoint=False)[:, np.newaxis])
 
@@ -546,9 +548,9 @@ class DifferentialEvolutionSolver(object):
             Important attributes are: ``x`` the solution array, ``success`` a
             Boolean flag indicating if the optimizer exited successfully and
             ``message`` which describes the cause of the termination. See
-            `OptimizeResult` for a description of other attributes.  If `polish`
-            was employed, and a lower minimum was obtained by the polishing,
-            then OptimizeResult also contains the ``jac`` attribute.
+            `OptimizeResult` for a description of other attributes.  If
+            `polish` was employed, and a lower minimum was obtained by the
+            polishing, then OptimizeResult also contains the ``jac`` attribute.
         """
         nit, warning_flag = 0, False
         status_message = _status_message['success']
@@ -634,11 +636,13 @@ class DifferentialEvolutionSolver(object):
         """
 
         ##############
-        ## CHANGES: self.func operates on the entire parameters array
+        # CHANGES: self.func operates on the entire parameters array
         ##############
-        itersize = max(0, min(len(self.population), self.maxfun - self._nfev + 1))
+        itersize = max(
+            0, min(len(self.population), self.maxfun - self._nfev + 1))
         candidates = self.population[:itersize]
-        parameters = np.array([self._scale_parameters(c) for c in candidates]) # TODO: vectorize
+        # TODO: vectorize
+        parameters = np.array([self._scale_parameters(c) for c in candidates])
         energies = self.func(parameters, *self.args)
         self.population_energies = energies
         self._nfev += itersize
@@ -654,8 +658,6 @@ class DifferentialEvolutionSolver(object):
 
         ##############
         ##############
-
-        
 
         minval = np.argmin(self.population_energies)
 
@@ -689,17 +691,21 @@ class DifferentialEvolutionSolver(object):
                           * (self.dither[1] - self.dither[0]) + self.dither[0])
 
         ##############
-        ## CHANGES: self.func operates on the entire parameters array
+        # CHANGES: self.func operates on the entire parameters array
         ##############
 
-        itersize = max(0, min(self.num_population_members, self.maxfun - self._nfev + 1))
-        trials = np.array([self._mutate(c) for c in range(itersize)]) # TODO: vectorize
-        for trial in trials: self._ensure_constraint(trial)
-        parameters = np.array([self._scale_parameters(trial) for trial in trials])
+        itersize = max(
+            0, min(self.num_population_members, self.maxfun - self._nfev + 1))
+        # TODO: vectorize
+        trials = np.array([self._mutate(c) for c in range(itersize)])
+        for trial in trials:
+            self._ensure_constraint(trial)
+        parameters = np.array(
+            [self._scale_parameters(trial) for trial in trials])
         energies = self.func(parameters, *self.args)
         self._nfev += itersize
 
-        for candidate,(energy,trial) in enumerate(zip(energies, trials)):
+        for candidate, (energy, trial) in enumerate(zip(energies, trials)):
             # if the energy of the trial candidate is lower than the
             # original population member then replace it
             if energy < self.population_energies[candidate]:
@@ -848,7 +854,7 @@ class DifferentialEvolutionSolver(object):
         currenttobest1bin, currenttobest1exp
         """
         r0, r1 = samples[:2]
-        bprime = (self.population[candidate] + self.scale * 
+        bprime = (self.population[candidate] + self.scale *
                   (self.population[0] - self.population[candidate] +
                    self.population[r0] - self.population[r1]))
         return bprime
