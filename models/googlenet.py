@@ -1,13 +1,11 @@
 '''GoogLeNet with PyTorch.'''
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
-from torch.autograd import Variable
 
 
 class Inception(nn.Module):
-    def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5, pool_planes):
+    def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5,
+                 pool_planes):
         super(Inception, self).__init__()
         # 1x1 conv branch
         self.b1 = nn.Sequential(
@@ -52,7 +50,7 @@ class Inception(nn.Module):
         y2 = self.b2(x)
         y3 = self.b3(x)
         y4 = self.b4(x)
-        return torch.cat([y1,y2,y3,y4], 1)
+        return torch.cat([y1, y2, y3, y4], 1)
 
 
 class GoogLeNet(nn.Module):
