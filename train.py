@@ -1,16 +1,5 @@
 '''
 Train CIFAR10 with PyTorch.
-
-To use custom models from the `models` module, do the following, e.g.:
-
-from models import resnet
-... and then
-    net = resnet.ResNet18()
-
-instead of:
-from torchvision import models
-... and then
-    net = models.resnet18(pretrained=True)
 '''
 from __future__ import print_function
 
@@ -25,7 +14,7 @@ import torchvision.transforms as transforms
 import os
 import argparse
 
-from torchvision import models
+from models import resnet
 from utils import progress_bar
 from torch.autograd import Variable
 
@@ -35,8 +24,6 @@ parser.add_argument('--epochs', default=1, type=int, help='number of epochs')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
-parser.add_argument('--use-feature-extractor', action='store_true',
-                    help='freeze conv layers from pretrained models')
 args = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
@@ -48,13 +35,11 @@ print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
-    transforms.Resize(224),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
 transform_test = transforms.Compose([
-    transforms.Resize(224),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
@@ -83,14 +68,7 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 else:
     print('==> Building model...')
-    net = models.resnet18(pretrained=True)
-    if args.use_feature_extractor:
-        print('====> Freezing feature extractor layers...')
-        for param in net.parameters():
-            param.requires_grad = False
-    num_ftrs = net.fc.in_features
-    # note, requires_grad == True in new layers by default
-    net.fc = nn.Linear(num_ftrs, len(classes))
+    net = resnet.ResNet18()
 
 if use_cuda:
     net.cuda()
