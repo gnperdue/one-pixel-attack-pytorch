@@ -20,6 +20,8 @@ from torch.autograd import Variable
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
+parser.add_argument('--ckpt', default='resnet18', type=str,
+                    help='checkpoint name')
 parser.add_argument('--epochs', default=1, type=int, help='number of epochs')
 parser.add_argument('--freeze-conv', action='store_true',
                     help='freeze conv layers from pretrained models')
@@ -66,7 +68,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.t7')
+    checkpoint = torch.load('./checkpoint/{}.t7'.format(args.ckpt))
     net = checkpoint['net']
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -156,7 +158,7 @@ def test(epoch):
         }
         if not os.path.isdir('checkpoint'):
             os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.t7')
+        torch.save(state, './checkpoint/{}.t7'.format(args.ckpt))
         best_acc = acc
 
 
