@@ -8,3 +8,10 @@
 |vgg16   |     93.42%             |              ~50.0%                |         ~93.0%           |
 |res18   |     94.94%             |              ~27.7%               |         ~78.0%           |
 |res101  |     94.51%             |              ~19.0%               |         ~63.3%                  |               
+
+## Pre-trained models
+
+To speed up working with this code, we've included copies of parts of the
+[PyTorch_CIFAR10](https://github.com/huyvnphan/PyTorch_CIFAR10) repository
+published by Huy Phan. This project enables us to easily use pretrained models
+and avoid the expense of retraining.
