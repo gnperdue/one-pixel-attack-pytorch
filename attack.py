@@ -17,6 +17,8 @@ parser = argparse.ArgumentParser(description='One pixel attack with PyTorch')
 parser.add_argument('--model', default='vgg16', help='The target model')
 parser.add_argument('--pixels', default=1, type=int,
                     help='The number of pixels that can be perturbed.')
+parser.add_argument('--max-examps', default=None, type=int,
+                    help='The max number of examples to attack.')
 parser.add_argument('--maxiter', default=100, type=int,
                     help='The max number of iterations in the DE algorithm.')
 parser.add_argument('--popsize', default=400, type=int,
@@ -134,13 +136,20 @@ def attack(img, label, net, target=None,
 
 
 def attack_all(net, loader, pixels=1, targeted=False, maxiter=75, popsize=400,
-               verbose=False):
+               max_examps=None, verbose=False):
 
     correct = 0
     success = 0
 
     # TODO - need tqdm here...
     for batch_idx, (input, target) in enumerate(loader):
+
+        if max_examps and batch_idx >= max_examps:
+            print("stopping after set number of max examples")
+            break
+
+        if verbose:
+            print("attacking batch_idx = {}".format(batch_idx))
 
         # TODO - Variable is deprecated, use torch.from_numpy; by default,
         # `requires_grad` is False.
@@ -209,7 +218,8 @@ def main():
 
     results = attack_all(net, testloader, pixels=args.pixels,
                          targeted=args.targeted, maxiter=args.maxiter,
-                         popsize=args.popsize, verbose=args.verbose)
+                         popsize=args.popsize, max_examps=args.max_examps,
+                         verbose=args.verbose)
     print("Final success rate: %.4f" % results)
 
 
