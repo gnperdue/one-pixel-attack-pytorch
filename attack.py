@@ -31,9 +31,11 @@ parser.add_argument('--verbose', action='store_true',
                     help='Print out additional information every iteration.')
 
 args = parser.parse_args()
+use_cuda = torch.cuda.is_available()
 
 
 def perturb_image(xs, img):
+    # TODO - note that "denormaliztion" here uses hardcoded CIFAR10 numbers.
     if xs.ndim < 2:
         xs = np.array([xs])
     batch = len(xs)
@@ -56,7 +58,10 @@ def perturb_image(xs, img):
 
 def predict_classes(xs, img, target_class, net, minimize=True):
     imgs_perturbed = perturb_image(xs, img.clone())
-    input = Variable(imgs_perturbed, volatile=True).cuda()
+    # TODO - Variable is deprecated, use torch.from_numpy; by default,
+    # `requires_grad` is False.
+    input = Variable(imgs_perturbed, volatile=True).cuda() if use_cuda \
+        else Variable(imgs_perturbed, volatile=True)
     predictions = F.softmax(net(input)).data.cpu().numpy()[:, target_class]
 
     return predictions if minimize else 1 - predictions
@@ -66,7 +71,10 @@ def attack_success(
         x, img, target_class, net, targeted_attack=False, verbose=False):
 
     attack_image = perturb_image(x, img.clone())
-    input = Variable(attack_image, volatile=True).cuda()
+    # TODO - Variable is deprecated, use torch.from_numpy; by default,
+    # `requires_grad` is False.
+    input = Variable(attack_image, volatile=True).cuda() if use_cuda \
+        else Variable(attack_image, volatile=True)
     confidence = F.softmax(net(input)).data.cpu().numpy()[0]
     predicted_class = np.argmax(confidence)
 
@@ -87,9 +95,10 @@ def attack(img, label, net, target=None,
     targeted_attack = target is not None
     target_class = target if targeted_attack else label
 
+    # TODO - bounds are explicitly hardcoded to CIFAR10 images
     bounds = [(0, 32), (0, 32), (0, 255), (0, 255), (0, 255)] * pixels
 
-    popmul = max(1, popsize/len(bounds))
+    popmul = max(1, popsize // len(bounds))
 
     predict_fn = lambda xs: predict_classes(
         xs, img, target_class, net, target is None)
@@ -110,7 +119,10 @@ def attack(img, label, net, target=None,
         atol=-1, callback=callback_fn, polish=False, init=inits)
 
     attack_image = perturb_image(attack_result.x, img)
-    attack_var = Variable(attack_image, volatile=True).cuda()
+    # TODO - Variable is deprecated, use torch.from_numpy; by default,
+    # `requires_grad` is False.
+    attack_var = Variable(attack_image, volatile=True).cuda() if use_cuda \
+        else Variable(attack_image, volatile=True)
     predicted_probs = F.softmax(net(attack_var)).data.cpu().numpy()[0]
 
     predicted_class = np.argmax(predicted_probs)
@@ -127,12 +139,17 @@ def attack_all(net, loader, pixels=1, targeted=False, maxiter=75, popsize=400,
     correct = 0
     success = 0
 
+    # TODO - need tqdm here...
     for batch_idx, (input, target) in enumerate(loader):
 
-        img_var = Variable(input, volatile=True).cuda()
+        # TODO - Variable is deprecated, use torch.from_numpy; by default,
+        # `requires_grad` is False.
+        img_var = Variable(input, volatile=True).cuda() if use_cuda \
+            else Variable(input, volatile=True)
         prior_probs = F.softmax(net(img_var))
         _, indices = torch.max(prior_probs, 1)
 
+        # check whether the model has the prediction correct before attack
         if target[0] != indices.data.cpu()[0]:
             continue
 
@@ -184,8 +201,9 @@ def main():
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
     checkpoint = torch.load('./checkpoint/%s.t7' % args.model)
     net = checkpoint['net']
-    net.cuda()
-    cudnn.benchmark = True
+    if use_cuda:
+        net.cuda()
+        cudnn.benchmark = True
 
     print("==> Starting attck...")
 
